@@ -3,16 +3,24 @@
 
 
 
-### URL to download cores from
+################# Change these variables if needed #################
+####################################################################
+
+### Buildbot URL to download cores from
 cores_url=http://buildbot.libretro.com/nightly/linux/x86_64/latest
-### Location of your retroarch cores
+### Location of your libretro cores
 cores_path=${HOME}/.config/retroarch/cores
-### Location to save logfile
+### Location to save the logfile
 logfile=${HOME}/.config/retroarch/cores/lrcm.log
+
+####################################################################
+####################################################################
 
 
 
 function lrcm_usage {
+    # Display the proper usage of lrcm if no argument is given
+    printf "%s\n"
     printf "%s\n\n" "Libretro Core Manager (lrcm) usage:"
     printf "%s\t %-16s %s\n" "" "list" "List exact names of all official cores"
     printf "%s\t %-16s %s\n" "" "add [CORE]" "Add [CORE] to your retroarch folder"
