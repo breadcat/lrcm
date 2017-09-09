@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# github.com/cpinkus/lrcm
+
+
+
+### URL to download cores from
+cores_url=http://buildbot.libretro.com/nightly/linux/x86_64/latest
+### Location of your retroarch cores
+cores_path=${HOME}/.config/retroarch/cores
+### Location to save logfile
+logfile=${HOME}/.config/retroarch/cores/lrcm.log
+
+
+
+function lrcm_usage {
+    printf "%s\n\n" "Libretro Core Manager (lrcm) usage:"
+    printf "%s\t %-16s %s\n" "" "list" "List exact names of all official cores"
+    printf "%s\t %-16s %s\n" "" "add [CORE]" "Add [CORE] to your retroarch folder"
+    printf "%s\t %-16s %s\n" "" "remove [CORE]" "Remove [CORE] from your retroarch folder"
+    printf "%s\t %-16s %s\n" "" "update" "Update all of your libretro cores"
+    printf "%s\t %-16s %s\n" "" "show" "Show cores that are currently installed"
+    printf "%s\t %-16s %s\n\n" "" "log" "Output the contents of the logfile"
+}
+
+
+
+function lrcm_list {
+    # Grab data from $cores_url, and display in nice columns
+    curl -s -o "${cores_path}/.lrcm_tmp" "${cores_url}/.index-extended"
+    cut -d ' ' -f 3 "${cores_path}/.lrcm_tmp" | sed 's/_libretro.so.zip//g' | column
+
+    # Cleanup
+    rm "${cores_path}/.lrcm_tmp"
+}
+
+
+
+function lrcm_show {
+    for i in "${cores_path}"/*_libretro.so
+    do
+        corename=$(basename "${i}")
+        printf "%s\n" "${corename%_libretro.so}"
+    done
+}
+
+
+
+function lrcm_add {
+    # Grab data from $cores_url, to check if specified core exists
+    curl -s -o "${cores_path}/.lrcm_tmp" "${cores_url}/.index-extended"
+    if grep -q "${arg2}_libretro.so.zip" "${cores_path}/.lrcm_tmp"
+    then
+        printf "%-26s" "${arg2}"
+        curl -s -o "${cores_path}/${arg2}_libretro.so.zip" "${cores_url}/${arg2}_libretro.so.zip"
+        unzip -q -o -d "${cores_path}" "${cores_path}/${arg2}_libretro.so.zip"
+        rm "${cores_path}/${arg2}_libretro.so.zip"
+
+        timestamp=$(grep "${arg2}_libretro.so.zip" "${cores_path}/.lrcm_tmp" | cut -d ' ' -f 1)
+        printf "%s\n" "ADDED (${timestamp})"
+        printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] ADDED ${arg2} (${timestamp})" >> "${logfile}"
+    else
+        printf "You must specify a valid core to add\n"
+    fi
+    
+    # Cleanup
+    rm "${cores_path}/.lrcm_tmp"
+}
+
+
+
+function lrcm_remove {
+    # Check to see if specified core exists in $cores_path
+    if rm "${cores_path}/${arg2}_libretro.so" &>/dev/null
+    then
+        printf "%-25s %s\n" "${arg2}" "REMOVED"
+        printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] REMOVED ${arg2}" >> "${logfile}"
+    else
+        printf "You must specify a valid core to remove\n"
+    fi
+}
+
+
+
+function lrcm_update {
+    # Grab data from $cores_url
+    touch "${cores_path}/.lrcm_data"
+    mv "${cores_path}/.lrcm_data" "${cores_path}/.lrcm_data.old"
+    curl -s -o "${cores_path}/.lrcm_data" "${cores_url}/.index-extended"
+
+    # Download and replace cores
+    for i in "${cores_path}"/*_libretro.so
+    do
+        corename=$(basename "${i}")
+        timestamp_old=$(grep "${corename}" "${cores_path}/.lrcm_data.old")
+        timestamp_new=$(grep "${corename}" "${cores_path}/.lrcm_data")
+
+        # Check if an update is necessary
+        if [[ "${timestamp_new}" == "${timestamp_old}" ]]
+        then
+            printf "%-25s %s\n" "${corename%_libretro.so}" "skipped"
+        else
+            printf "%-26s" "${corename%_libretro.so}"
+            curl -s -o "${cores_path}/${corename}.zip" "${cores_url}/${corename}.zip"
+            unzip -q -o -d "${cores_path}" "${cores_path}/${corename}.zip"
+            rm "${cores_path}/${corename}.zip"
+
+            timestamp=$(cut -d ' ' -f 1 <<< "${timestamp_new}")
+            printf "%s\n" "UPDATED (${timestamp})"
+            printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] UPDATED ${corename%_libretro.so} (${timestamp})" >> "${logfile}"
+        fi
+    done
+
+    # Cleanup
+    rm "${cores_path}/.lrcm_data.old"
+}
+
+
+
+function lrcm_log {
+    # Check if logfile exists
+    if [[ ! -a "${logfile}" ]]
+    then
+        touch "${logfile}"
+    fi
+
+    # Print logfile to stdout
+    printf "%s\n" "$(<${logfile})"
+}
+
+
+
+# Commandline arguments
+if [[ "${1}" == "list" ]]
+then
+    lrcm_list
+elif [[ "${1}" == "show" ]]
+then
+    lrcm_show
+elif [[ "${1}" == "add" ]]
+then
+    arg2=${2}
+    lrcm_add
+elif [[ "${1}" == "remove" ]]
+then
+    arg2=${2}
+    lrcm_remove
+elif [[ "${1}" == "update" ]]
+then
+    lrcm_update
+elif [[ "${1}" == "log" ]]
+then
+    lrcm_log
+else
+    lrcm_usage
+fi
