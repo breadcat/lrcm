@@ -1,4 +1,5 @@
 <h1>Libretro Core Manager (lrcm)</h1>
+<h3>A commandline management tool for your libretro cores</h3>
 
 <p>Libretro Core Manager (lrcm) usage:</p>
 <ul>
@@ -24,6 +25,6 @@
     <li>./lrcm</li>
 </ul>
 
-<p>The <b>lrcm</b> file is 100% portable, so you can move it wherever you want. I recommend placing it somewhere in your $PATH, such as /usr/local/bin.
+<p>The <b>lrcm</b> script is fully portable, so you can move it wherever you want. I recommend placing it somewhere in your $PATH, such as /usr/local/bin. Screenshot:
 
 <p align="center"><img src="screenshot.png"></p>
