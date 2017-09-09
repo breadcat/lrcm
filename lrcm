@@ -87,9 +87,17 @@ function lrcm_remove {
 
 function lrcm_update {
     # Grab data from $cores_url
-    touch "${cores_path}/.lrcm_data"
-    mv "${cores_path}/.lrcm_data" "${cores_path}/.lrcm_data.old"
-    curl -s -o "${cores_path}/.lrcm_data" "${cores_url}/.index-extended"
+    if [[ ! -a "${cores_path}/.lrcm_data" ]]
+    then
+        touch "${cores_path}/.lrcm_data"
+        printf "%s\n" "-- Updating all cores on the first run only --"
+    fi
+    cp "${cores_path}/.lrcm_data" "${cores_path}/.lrcm_data.old"
+    if ! curl -s -o "${cores_path}/.lrcm_data" "${cores_url}/.index-extended"
+    then
+        printf "%s\n" "Buildbot data failed to download"
+        end 1
+    fi
 
     # Download and replace cores
     for i in "${cores_path}"/*_libretro.so
@@ -104,7 +112,12 @@ function lrcm_update {
             printf "%-25s %s\n" "${corename%_libretro.so}" "skipped"
         else
             printf "%-26s" "${corename%_libretro.so}"
-            curl -s -o "${cores_path}/${corename}.zip" "${cores_url}/${corename}.zip"
+            if ! curl -s -o "${cores_path}/${corename}.zip" "${cores_url}/${corename}.zip"
+            then
+                printf "%s\n" "FAILED"
+                printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] FAILED ${corename%_libretro.so}" >> "${logfile}"
+                continue
+            fi
             unzip -q -o -d "${cores_path}" "${cores_path}/${corename}.zip"
             rm "${cores_path}/${corename}.zip"
 
