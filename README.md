@@ -26,4 +26,4 @@
 
 <p>The <b>lrcm</b> file is 100% portable, so you can move it wherever you want. I recommend placing it somewhere in your $PATH, such as /usr/local/bin.
 
-<center>![Screenshot](screenshot.png?raw=true "Screenshot")</center>
+<p align="center"><img src="screenshot.png"></p>
