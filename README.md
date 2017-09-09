@@ -10,4 +10,10 @@
     <li><b>log</b> - Output the contents of the logfile</li>
 </ul>
 
+<p>This script is meant to make libretro core management easier for those who are comfortable with the commandline. This project is in no way affiliated with libretro or retroarch; this is just something I decided to do out of boredom.</p>
+
+<p>This script is meant to be used with the bash shell, so it should work wherever bash is present. I have only tested this on Linux, so there is no guarantee it will work on macOS or the "Windows Subsystem for Linux (WSL)."</p>
+
+<p>If you have your cores located somewhere other than <b>~/.config/retroarch/cores/</b> then you will need to specify exactly where in the <b>cores_path</b> variable at the top of the script. If you use an architecture other than <b>x86_64</b>, then you will need to edit the <b>cores_url</b> variable to the correct buildbot architecture. Lastly, if you wish the logfile to be located somewhere else, you can edit the <b>logfile</b> variable.</p>
+
 ![Screenshot](screenshot.png?raw=true "Screenshot")
