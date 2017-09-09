@@ -44,11 +44,7 @@ function lrcm_list {
 
 
 function lrcm_show {
-    for i in "${cores_path}"/*_libretro.so
-    do
-        corename=$(basename "${i}")
-        printf "%s\n" "${corename%_libretro.so}"
-    done
+    find "${cores_path}" -name "*_libretro.so" -exec basename "{}" \; | sed 's/_libretro.so//g' | column
 }
 
 
