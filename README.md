@@ -1,0 +1,2 @@
+# lrcm
+Libretro Core Manager
