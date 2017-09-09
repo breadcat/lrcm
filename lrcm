@@ -34,8 +34,12 @@ function lrcm_usage {
 
 function lrcm_list {
     # Grab data from $cores_url, and display in nice columns
-    curl -s -o "${cores_path}/.lrcm_tmp" "${cores_url}/.index-extended"
-    cut -d ' ' -f 3 "${cores_path}/.lrcm_tmp" | sed 's/_libretro.so.zip//g' | column
+    if ! curl -s -o "${cores_path}/.lrcm_tmp" "${cores_url}/.index-extended"
+    then
+        printf "%s\n" "Buildbot data failed to download"
+        end 1
+    fi
+    cut -d ' ' -f 3 "${cores_path}/.lrcm_tmp" | sed 's/_libretro.so.zip//g' | sort | column
 
     # Cleanup
     rm "${cores_path}/.lrcm_tmp"
@@ -44,18 +48,28 @@ function lrcm_list {
 
 
 function lrcm_show {
-    find "${cores_path}" -name "*_libretro.so" -exec basename "{}" \; | sed 's/_libretro.so//g' | column
+    find "${cores_path}" -name "*_libretro.so" -exec basename "{}" \; | sed 's/_libretro.so//g' | sort | column
 }
 
 
 
 function lrcm_add {
     # Grab data from $cores_url, to check if specified core exists
-    curl -s -o "${cores_path}/.lrcm_tmp" "${cores_url}/.index-extended"
+    if ! curl -s -o "${cores_path}/.lrcm_tmp" "${cores_url}/.index-extended"
+    then
+        printf "%s\n" "Buildbot data failed to download"
+        end 1
+    fi
     if grep -q "${arg2}_libretro.so.zip" "${cores_path}/.lrcm_tmp"
     then
         printf "%-26s" "${arg2}"
-        curl -s -o "${cores_path}/${arg2}_libretro.so.zip" "${cores_url}/${arg2}_libretro.so.zip"
+        if ! curl -s -o "${cores_path}/${arg2}_libretro.so.zip" "${cores_url}/${arg2}_libretro.so.zip"
+        then
+            printf "%s\n" "ADD FAILED"
+            printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] ADD FAILED ${corename%_libretro.so}" >> "${logfile}"
+            rm "${cores_path}/.lrcm_tmp"
+            end 1
+        fi
         unzip -q -o -d "${cores_path}" "${cores_path}/${arg2}_libretro.so.zip"
         rm "${cores_path}/${arg2}_libretro.so.zip"
 
@@ -65,7 +79,7 @@ function lrcm_add {
     else
         printf "You must specify a valid core to add\n"
     fi
-    
+
     # Cleanup
     rm "${cores_path}/.lrcm_tmp"
 }
@@ -114,8 +128,8 @@ function lrcm_update {
             printf "%-26s" "${corename%_libretro.so}"
             if ! curl -s -o "${cores_path}/${corename}.zip" "${cores_url}/${corename}.zip"
             then
-                printf "%s\n" "FAILED"
-                printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] FAILED ${corename%_libretro.so}" >> "${logfile}"
+                printf "%s\n" "UPDATE FAILED"
+                printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] UPDATE FAILED ${corename%_libretro.so}" >> "${logfile}"
                 continue
             fi
             unzip -q -o -d "${cores_path}" "${cores_path}/${corename}.zip"
