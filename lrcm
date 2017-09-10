@@ -24,7 +24,7 @@ function no_cores {
     # Check to see if any cores were specified
     if [[ -z "${arg2}" ]]
     then
-        echo "No core(s) specified"
+        printf "%s\n" "No core(s) specified"
         exit 1
     fi
 }
