@@ -37,7 +37,7 @@ function lrcm_list {
     if ! curl -s -o "${cores_path}/.lrcm_tmp" "${cores_url}/.index-extended"
     then
         printf "%s\n" "Buildbot data failed to download"
-        end 1
+        exit 1
     fi
     cut -d ' ' -f 3 "${cores_path}/.lrcm_tmp" | sed 's/_libretro.so.zip//g' | sort | column
 
@@ -58,7 +58,7 @@ function lrcm_add {
     if ! curl -s -o "${cores_path}/.lrcm_tmp" "${cores_url}/.index-extended"
     then
         printf "%s\n" "Buildbot data failed to download"
-        end 1
+        exit 1
     fi
     if grep -q "${arg2}_libretro.so.zip" "${cores_path}/.lrcm_tmp"
     then
@@ -68,7 +68,7 @@ function lrcm_add {
             printf "%s\n" "ADD FAILED"
             printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] ADD FAILED ${corename%_libretro.so}" >> "${logfile}"
             rm "${cores_path}/.lrcm_tmp"
-            end 1
+            exit 1
         fi
         unzip -q -o -d "${cores_path}" "${cores_path}/${arg2}_libretro.so.zip"
         rm "${cores_path}/${arg2}_libretro.so.zip"
@@ -110,7 +110,7 @@ function lrcm_update {
     if ! curl -s -o "${cores_path}/.lrcm_data" "${cores_url}/.index-extended"
     then
         printf "%s\n" "Buildbot data failed to download"
-        end 1
+        exit 1
     fi
 
     # Download and replace cores
