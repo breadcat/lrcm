@@ -8,8 +8,10 @@
 
 ### Buildbot URL to download cores from
 cores_url=http://buildbot.libretro.com/nightly/linux/x86_64/latest
+
 ### Location of your libretro cores
 cores_path=${HOME}/.config/retroarch/cores
+
 ### Location to save the logfile
 logfile=${HOME}/.config/retroarch/cores/lrcm.log
 
@@ -23,6 +25,7 @@ function no_cores {
     if [[ -z "${arg2}" ]]
     then
         echo "No core(s) specified"
+        exit 1
     fi
 }
 
