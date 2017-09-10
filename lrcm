@@ -136,9 +136,20 @@ function lrcm_update {
         printf "%s\n" "-- Updating all cores on the first run only --"
     fi
     cp "${cores_path}/.lrcm_data" "${cores_path}/.lrcm_data.old"
-    if ! curl -s -o "${cores_path}/.lrcm_data" "${cores_url}/.index-extended"
+    if ! curl -s -o "${cores_path}/.lrcm_data.tmp" "${cores_url}/.index-extended"
     then
         buildbot_fail
+    fi
+
+    # Check if .index-extended was downloaded properly
+    if grep -q "_libretro.so.zip" "${cores_path}/.lrcm_data.tmp"
+    then
+        mv "${cores_path}/.lrcm_data.tmp" "${cores_path}/.lrcm_data"
+    else
+        printf "%s\n" "Buildbot data was not downloaded properly"
+        printf "%s\n" "The \"cores_url\" variable might be invalid"
+        rm "${cores_path}/.lrcm_data.tmp"
+        exit 1
     fi
 
     # Download and replace cores
