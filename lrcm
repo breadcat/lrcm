@@ -18,6 +18,25 @@ logfile=${HOME}/.config/retroarch/cores/lrcm.log
 
 
 
+function no_cores {
+    # Check to see if any cores were specified
+    if [[ -z "${arg2}" ]]
+    then
+        echo "No core(s) specified"
+    fi
+}
+
+
+
+function buildbot_fail {
+    # Checks if buildbot data downloads correctly
+    printf "%s\n" "Buildbot data failed to download"
+    printf "%s\n" "Check your internet connection"
+    exit 1
+}
+
+
+
 function lrcm_usage {
     # Display the proper usage of lrcm if no argument is given
     printf "%s\n"
@@ -36,8 +55,7 @@ function lrcm_list {
     # Grab data from $cores_url, and display in nice columns
     if ! curl -s -o "${cores_path}/.lrcm_tmp" "${cores_url}/.index-extended"
     then
-        printf "%s\n" "Buildbot data failed to download"
-        exit 1
+        buildbot_fail
     fi
     cut -d ' ' -f 3 "${cores_path}/.lrcm_tmp" | sed 's/_libretro.so.zip//g' | sort | column
 
@@ -48,6 +66,7 @@ function lrcm_list {
 
 
 function lrcm_show {
+    # Shows cores already in $cores_path
     find "${cores_path}" -name "*_libretro.so" -exec basename "{}" \; | sed 's/_libretro.so//g' | sort | column
 }
 
@@ -57,28 +76,32 @@ function lrcm_add {
     # Grab data from $cores_url, to check if specified core exists
     if ! curl -s -o "${cores_path}/.lrcm_tmp" "${cores_url}/.index-extended"
     then
-        printf "%s\n" "Buildbot data failed to download"
-        exit 1
+        buildbot_fail
     fi
-    if grep -q "${arg2}_libretro.so.zip" "${cores_path}/.lrcm_tmp"
-    then
-        printf "%-26s" "${arg2}"
-        if ! curl -s -o "${cores_path}/${arg2}_libretro.so.zip" "${cores_url}/${arg2}_libretro.so.zip"
-        then
-            printf "%s\n" "ADD FAILED"
-            printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] ADD FAILED ${corename%_libretro.so}" >> "${logfile}"
-            rm "${cores_path}/.lrcm_tmp"
-            exit 1
-        fi
-        unzip -q -o -d "${cores_path}" "${cores_path}/${arg2}_libretro.so.zip"
-        rm "${cores_path}/${arg2}_libretro.so.zip"
 
-        timestamp=$(grep "${arg2}_libretro.so.zip" "${cores_path}/.lrcm_tmp" | cut -d ' ' -f 1)
-        printf "%s\n" "ADDED (${timestamp})"
-        printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] ADDED ${arg2} (${timestamp})" >> "${logfile}"
-    else
-        printf "You must specify a valid core to add\n"
-    fi
+    # Download cores
+    for i in ${arg2}
+    do
+        if grep -q "${i}_libretro.so.zip" "${cores_path}/.lrcm_tmp"
+        then
+            printf "%-26s" "${i}"
+            if ! curl -s -o "${cores_path}/${i}_libretro.so.zip" "${cores_url}/${i}_libretro.so.zip"
+            then
+                printf "%s\n" "ADD FAILED"
+                printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] ADD FAILED ${corename%_libretro.so}" >> "${logfile}"
+                rm "${cores_path}/.lrcm_tmp"
+                exit 1
+            fi
+            unzip -q -o -d "${cores_path}" "${cores_path}/${i}_libretro.so.zip"
+            rm "${cores_path}/${i}_libretro.so.zip"
+
+            timestamp=$(grep "${i}_libretro.so.zip" "${cores_path}/.lrcm_tmp" | cut -d ' ' -f 1)
+            printf "%s\n" "ADDED (${timestamp})"
+            printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] ADDED ${i} (${timestamp})" >> "${logfile}"
+        else
+            printf "%-25s %s\n" "${i}" "not a valid core"
+        fi
+    done
 
     # Cleanup
     rm "${cores_path}/.lrcm_tmp"
@@ -87,14 +110,17 @@ function lrcm_add {
 
 
 function lrcm_remove {
-    # Check to see if specified core exists in $cores_path
-    if rm "${cores_path}/${arg2}_libretro.so" &>/dev/null
-    then
-        printf "%-25s %s\n" "${arg2}" "REMOVED"
-        printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] REMOVED ${arg2}" >> "${logfile}"
-    else
-        printf "You must specify a valid core to remove\n"
-    fi
+    # Delete all cores that were specified
+    for i in ${arg2}
+    do
+        if rm "${cores_path}/${i}_libretro.so" &>/dev/null
+        then
+            printf "%-25s %s\n" "${i}" "REMOVED"
+            printf "%s\n" "[$(date +"%d-%b-%Y %H:%M")] REMOVED ${i}" >> "${logfile}"
+        else
+            printf "%-25s %s\n" "${i}" "not a valid core"
+        fi
+    done
 }
 
 
@@ -109,12 +135,11 @@ function lrcm_update {
     cp "${cores_path}/.lrcm_data" "${cores_path}/.lrcm_data.old"
     if ! curl -s -o "${cores_path}/.lrcm_data" "${cores_url}/.index-extended"
     then
-        printf "%s\n" "Buildbot data failed to download"
-        exit 1
+        buildbot_fail
     fi
 
     # Download and replace cores
-    for i in "${cores_path}"/*_libretro.so
+    for i in ${cores_path}/*_libretro.so
     do
         corename=$(basename "${i}")
         timestamp_old=$(grep "${corename}" "${cores_path}/.lrcm_data.old")
@@ -169,11 +194,13 @@ then
     lrcm_show
 elif [[ "${1}" == "add" ]]
 then
-    arg2=${2}
+    arg2=${@:2}
+    no_cores
     lrcm_add
 elif [[ "${1}" == "remove" ]]
 then
-    arg2=${2}
+    arg2=${@:2}
+    no_cores
     lrcm_remove
 elif [[ "${1}" == "update" ]]
 then
