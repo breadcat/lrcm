@@ -44,12 +44,12 @@ function lrcm_usage {
     # Display the proper usage of lrcm if no argument is given
     printf "%s\n" ""
     printf "%s\n\n" "Libretro Core Manager (lrcm) usage:"
-    printf "%s\t %-16s %s\n" "" "list" "List exact names of all official cores"
-    printf "%s\t %-16s %s\n" "" "add [CORE]" "Add [CORE] to your retroarch folder"
-    printf "%s\t %-16s %s\n" "" "remove [CORE]" "Remove [CORE] from your retroarch folder"
-    printf "%s\t %-16s %s\n" "" "update" "Update all of your libretro cores"
-    printf "%s\t %-16s %s\n" "" "show" "Show cores that are currently installed"
-    printf "%s\t %-16s %s\n\n" "" "log" "Output the contents of the logfile"
+    printf "%s\t %-26s %s\n" "" "list" "List exact names of all official cores"
+    printf "%s\t %-26s %s\n" "" "show" "Show cores that are currently installed"
+    printf "%s\t %-26s %s\n" "" "add [CORE1] [CORE2]..." "Add [CORE] to your retroarch folder"
+    printf "%s\t %-26s %s\n" "" "remove [CORE1] [CORE2]..." "Remove [CORE] from your retroarch folder"
+    printf "%s\t %-26s %s\n" "" "update" "Update all of your libretro cores"
+    printf "%s\t %-26s %s\n\n" "" "log" "Output the contents of the logfile"
 }
 
 
