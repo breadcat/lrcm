@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+# github.com/cpinkus/lrcm
+
+
+
+################# Change these variables if needed #################
+####################################################################
+
+### Location of the "lrcm" script
+lrcm_loc=lrcm
+
+####################################################################
+####################################################################
+
+
+
+task=$(zenity \
+    --width="410" \
+    --height="275" \
+    --list \
+    --radiolist \
+    --title="lrcm_zenity" \
+    --column="" \
+    --column="Task" \
+    --column="Description" \
+    FALSE "list" "List exact names of all official cores" \
+    FALSE "show" "Show cores that are currently installed" \
+    FALSE "add" "Add [CORE] to your retroarch folder" \
+    FALSE "remove" "Remove [CORE] from your retroarch folder" \
+    FALSE "update" "Update all of your libretro cores" \
+    FALSE "log" "Output the contents of the logfile")
+
+
+
+if [[ "${task}" == "update" ]]
+then
+    "${lrcm_loc}" update | sed 's/  */ /g' > .lrcm_zenity.update
+    zenity \
+        --width="300" \
+        --height="550" \
+        --text-info \
+        --title="lrcm update" \
+        --filename=".lrcm_zenity.update"
+    rm .lrcm_zenity.update
+elif [[ "${task}" == "add" ]]
+then
+    task_add=$(zenity \
+        --width="300" \
+        --height="100" \
+        --entry \
+        --title="lrcm add" \
+        --text="List core(s) you wish to add:" \
+        --entry-text="")
+    if "${lrcm_loc}" add ${task_add}
+    then
+        zenity \
+            --width="100" \
+            --height="100" \
+            --info \
+            --title="lrcm add" \
+            --text="Success!"
+    else
+        zenity \
+            --width="100" \
+            --height="100" \
+            --info \
+            --title="lrcm add" \
+            --text="Failed"
+    fi
+elif [[ "${task}" == "remove" ]]
+then
+    task_remove=$(zenity \
+        --width="300" \
+        --height="100" \
+        --entry \
+        --title="lrcm remove" \
+        --text="List core(s) you wish to remove:" \
+        --entry-text="")
+    if "${lrcm_loc}" remove ${task_remove}
+    then
+        zenity \
+            --width="100" \
+            --height="100" \
+            --info \
+            --title="lrcm remove" \
+            --text="Success!"
+    else
+        zenity \
+            --width="100" \
+            --height="100" \
+            --info \
+            --title="lrcm remove" \
+            --text="Failed"
+    fi
+elif [[ "${task}" == "list" ]]
+then
+    "${lrcm_loc}" list | sed 's/\t/\n/g' | sed '/^$/d' | sort > .lrcm_zenity.list
+    zenity \
+        --width="300" \
+        --height="550" \
+        --text-info \
+        --title="lrcm list" \
+        --filename=".lrcm_zenity.list"
+    rm .lrcm_zenity.list
+elif [[ "${task}" == "show" ]]
+then
+    "${lrcm_loc}" show | sed 's/\t/\n/g' | sed '/^$/d' | sort > .lrcm_zenity.show
+    zenity \
+        --width="300" \
+        --height="550" \
+        --text-info \
+        --title="lrcm show" \
+        --filename=".lrcm_zenity.show"
+    rm .lrcm_zenity.show
+elif [[ "${task}" == "log" ]]
+then
+    "${lrcm_loc}" log > .lrcm_zenity.log
+    zenity \
+        --width="550" \
+        --height="550" \
+        --text-info \
+        --title="lrcm log" \
+        --filename=".lrcm_zenity.log"
+    rm .lrcm_zenity.log
+else
+    printf "%s\n" "Bye bye"
+fi
