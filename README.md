@@ -25,6 +25,4 @@
     <li>./lrcm</li>
 </ul>
 
-<p>The <b>lrcm</b> script is fully portable, so you can move it wherever you want. I recommend placing it somewhere in your $PATH, such as /usr/local/bin. Screenshot:
-
-<p align="center"><img src="screenshot.png"></p>
+<p>The <b>lrcm</b> script is fully portable, so you can move it wherever you want. I recommend placing it somewhere in your $PATH, such as /usr/local/bin.
